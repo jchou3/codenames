@@ -1,0 +1,6 @@
+nltk
+pandas
+gensim
+regex
+pickle
+Py-Dictionary
