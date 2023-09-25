@@ -2,7 +2,7 @@ import gensim
 import pickle as pkl
 
 
-def create_model(corpus, vector_size = 100, window = 5):
+def create_model(corpus, vector_size = 32, window = 5):
     model = gensim.models.Word2Vec(corpus, min_count = 1, 
                                    vector_size = vector_size, window = window)
     return model

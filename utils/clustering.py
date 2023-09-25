@@ -8,12 +8,15 @@ class cluster:
     def __init__(self, words: list, model):
         self.words = words
         self.model = model
+        self.center = np.zeros(32)
 
-        word_vectors = []
+        word_vectors = np.zeros(model.wv[self.words[0]].shape[0])
         for word in self.words:
-            word_vectors.append(model.wv[word])
+            for k in range(32):
+                word_vectors[k] += model.wv[word][k]
 
-        self.center = word_vectors.mean(0)
+        for k in range(32):
+            self.center[k] = word_vectors[k] / len(self.words)
 
     # Calculates distance value of cluster
     def get_val(self):
@@ -22,13 +25,14 @@ class cluster:
     # Calculates center of a given group
     # Returns vector coordinates
     def get_center(self):
-        return self.center()
+        return self.center
 
     def get_words(self):
         return self.words
     
     def get_model(self):
         return self.model
+    
 
 
 # Agglomaritive hierarchical clustering
@@ -41,18 +45,41 @@ def agg_cluster(words: list, assasin: str, model, min_clusters = 1, max_clusters
     clusters = []
     cluster_his = []
 
-
     #Fusion is determined by disimilarity between groups -- pick a height and cut it off
     for word in words:
         word_list = [word]
         clusters.append(cluster(word_list, model))
 
+    cluster_his = agg_rec(clusters, assasin, min_clusters)
+    
+    history_dis = []
+    for history in reversed(cluster_his):
+        dissims = []
+        for i in range(len(history)):
+            for j in range(i+1, len(history)):
+                dissims.append(model.wv.wmdistance(history[i].get_words(), history[j].get_words()))
+                # print(f'Cluster A: {history[i].get_words()} Cluster B: {history[j].get_words()} Dissimilarity: {model.wv.wmdistance(history[i].get_words(), history[j].get_words())}')
+        # if np.mean(dissims) > 0.78:
+        #     return history
+        if len(dissims) > 1:
+            history_dis.append(np.mean(dissims))
+    
+    largest_jump = 0
+    largest_index = 0
+    for i in range(1, len(history_dis)):
+        jump = history_dis[i] - history_dis[i - 1]
+        if jump > largest_jump:
+            largest_jump = largest_jump
+            largest_index = i
+
+    return cluster_his[largest_index]
 
 # Returns history of clusters
 def agg_rec(clusters, assasin, min):
 
     if len(clusters) <= min:
-        return [clusters]
+        hist = [clusters]
+        return hist
     
     else:
         a, b = find_closest_two(clusters, assasin)
@@ -61,7 +88,8 @@ def agg_rec(clusters, assasin, min):
         new_clusters = [cl for i, cl in enumerate(clusters) if (i != a and i != b)]
         new_clusters.append(new_clus)
         cluster_his = agg_rec(new_clusters, assasin, min)
-        return cluster_his.append(clusters)
+        cluster_his.append(clusters)
+        return cluster_his
 
 # Returns indices
 def find_closest_two(clusters, assasin):
@@ -104,3 +132,17 @@ def get_distance(a, b):
     sum_sq = np.dot(temp.T, temp)
 
     return np.sqrt(sum_sq)
+
+
+
+def largets_cluster(clusters: list):
+    largest = clusters[0]
+    largest_size = 0
+
+    for cluster in clusters:
+        size = len(cluster.get_words())
+        if size > largest_size:
+            largest_size = size
+            largest = cluster
+
+    return largest, size
