@@ -6,8 +6,8 @@ import pandas as pd
 model = nlp_model.load_model('models', 'nlp_model')
 
 # Threshold: .63
-# words = ["apple", "pear", "orange", "skip", "cancel", "construction", "red"]
-# assasin = "lamp"
+# words = ["apple", "pear", "banana", "skip", "cancel", "construction", "red"]
+# assasin = "orange"
 
 # words = ["pencil", "notebook", "paper", "tree", "grass", "sleep"]
 # assasin = "apple"
